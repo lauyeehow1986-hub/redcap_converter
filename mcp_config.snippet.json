@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "redcap-singleline": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "C:\\Tools\\redcap-singleline\\start_mcp.bat"
+      ],
+      "env": {
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}

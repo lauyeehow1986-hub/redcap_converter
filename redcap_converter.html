@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REDCap Single-Line Converter (Portable Hybrid GUI)</title>
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --border: #d9e1ec;
+    --border-soft: #e8edf5;
+    --text: #152238;
+    --muted: #5a6a85;
+    --primary: #1d4ed8;
+    --primary-hover: #1e40af;
+    --primary-soft: #eff6ff;
+    --green: #0f766e;
+    --green-soft: #ecfdf5;
+    --green-border: #99f6e4;
+    --blue: #1d4ed8;
+    --blue-soft: #eff6ff;
+    --blue-border: #bfdbfe;
+    --amber: #b45309;
+    --amber-soft: #fffbeb;
+    --amber-border: #fde68a;
+    --indigo: #4338ca;
+    --indigo-soft: #eef2ff;
+    --teal: #0e7490;
+    --teal-soft: #ecfeff;
+    --red: #b91c1c;
+    --red-soft: #fef2f2;
+    --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.45;
+    font-size: 14px;
+  }
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 18px 20px 44px;
+  }
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .top-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .badge-python { background: var(--green-soft); color: var(--green); border-color: var(--green-border); }
+  .badge-js { background: var(--blue-soft); color: var(--blue); border-color: var(--blue-border); }
+  .badge-privacy { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .step-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 15.5px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  button, select, input[type="text"], input[type="number"] {
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .btn:hover:not(:disabled) { background: #f8fafc; border-color: #94a3b8; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
+  .btn-success {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+  .btn-success:hover:not(:disabled) { background: #115e59; }
+  .btn-danger {
+    background: #fff;
+    color: var(--red);
+    border-color: #fecaca;
+  }
+  .btn-danger:hover:not(:disabled) { background: var(--red-soft); }
+  .btn-sm { padding: 5px 9px; font-size: 12px; border-radius: 6px; }
+
+  .input, select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--text);
+  }
+  .input:focus, select:focus { outline: 2px solid #93c5fd; border-color: var(--primary); }
+
+  .dropzone {
+    border: 2px dashed #b8c7dc;
+    border-radius: 10px;
+    padding: 22px 16px;
+    text-align: center;
+    background: #f8fafd;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dropzone.dragover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+  .dropzone strong { display: block; font-size: 14.5px; margin-bottom: 4px; }
+  .dropzone span { color: var(--muted); font-size: 12.5px; }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .stat-box {
+    background: #f8fafc;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 8px 11px;
+  }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+  .stat-val { font-size: 15px; font-weight: 700; margin-top: 2px; word-break: break-word; }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .pill-group { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+  .pill {
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .pill.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .bulk-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    background: #f8fafc;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  .bulk-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 410px;
+    background: #fff;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f1f5f9;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: middle;
+  }
+  tbody tr:hover { background: #f8fafc; }
+  tbody tr.selected-row { background: #f0f7ff; }
+
+  .kind-tag {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .kind-static { background: #f1f5f9; color: #475569; }
+  .kind-repeating_instrument { background: var(--indigo-soft); color: var(--indigo); }
+  .kind-repeating_event { background: var(--amber-soft); color: var(--amber); }
+  .kind-longitudinal { background: var(--teal-soft); color: var(--teal); }
+  .mono { font-family: var(--mono); font-size: 12.5px; }
+
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+  .field-group .help {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .banner {
+    padding: 10px 13px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    font-size: 13px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .banner-info { background: var(--blue-soft); border-color: var(--blue-border); color: #1e3a8a; }
+  .banner-ok { background: var(--green-soft); border-color: var(--green-border); color: #115e59; }
+  .banner-err { background: var(--red-soft); border-color: #fecaca; color: var(--red); }
+  .banner-warn { background: var(--amber-soft); border-color: var(--amber-border); color: var(--amber); }
+
+  .preview-table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 380px;
+  }
+  .preview-table-wrap th:first-child,
+  .preview-table-wrap td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .preview-table-wrap thead th:first-child {
+    z-index: 3;
+    background: #f1f5f9;
+  }
+  .preview-cell {
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  details {
+    margin-top: 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: #fafbfd;
+  }
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12.5px;
+    color: #334155;
+  }
+  .scope-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .scope-checks label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 6px 14px;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <div class="brand">
+      <h1>REDCap Single-Line Converter</h1>
+      <p>Flatten multi-line repeating instruments &amp; longitudinal events into one row per record</p>
+    </div>
+    <div class="top-actions">
+      <span class="badge badge-privacy" title="All data stays on this device. No external requests.">100% Local &amp; Offline</span>
+      <span id="engine-badge" class="badge badge-js"><span class="dot"></span><span id="engine-badge-text">Offline Browser Engine (Zero-Install)</span></span>
+      <button id="btn-load-profile" class="btn btn-sm" type="button">Load Profile (.json)</button>
+      <button id="btn-save-profile-top" class="btn btn-sm" type="button" disabled>Save Profile (.json)</button>
+      <button id="btn-shutdown" class="btn btn-sm btn-danger hidden" type="button">Stop Server</button>
+    </div>
+  </header>
+
+  <div id="status-banner" class="banner banner-info hidden">
+    <span id="status-text"></span>
+    <button id="btn-dismiss-status" class="btn btn-sm" type="button">Dismiss</button>
+  </div>
+
+  <!-- Step 1 -->
+  <section class="card">
+    <div class="card-header">
+      <h2 class="step-title"><span class="step-num">1</span> Load REDCap Export (CSV / TSV)</h2>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="loaded-filename" class="mono muted">No file loaded</span>
+      </div>
+    </div>
+
+    <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Choose or drop REDCap CSV or TSV file">
+      <strong>Drag &amp; drop a REDCap CSV or TSV export here, or click to browse</strong>
+      <span>Supports classic, longitudinal, raw variable names, labeled headers, repeating instruments, and repeating events.</span>
+      <input id="file-input" type="file" accept=".csv,.tsv,.txt" class="hidden">
+    </div>
+
+    <details id="python-path-box" class="hidden">
+      <summary>Or inspect a local file path directly (recommended for 100 MB+ exports)</summary>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <input id="local-path-input" type="text" class="input mono" style="flex:1;min-width:260px;" placeholder="C:\path\to\redcap_export.csv">
+        <button id="btn-inspect-path" class="btn" type="button">Inspect Path</button>
+      </div>
+    </details>
+
+    <div id="dataset-summary" class="hidden">
+      <div class="summary-grid">
+        <div class="stat-box">
+          <div class="stat-label">Input Rows &rarr; Records</div>
+          <div id="sum-records" class="stat-val">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Data Fields</div>
+          <div id="sum-fields" class="stat-val">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Events</div>
+          <div id="sum-events" class="stat-val">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Repeating Instruments</div>
+          <div id="sum-insts" class="stat-val">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Max Repeat Instance</div>
+          <div id="sum-maxinst" class="stat-val">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Record ID Column</div>
+          <div style="margin-top:3px;">
+            <select id="id-col-select" style="width:100%;font-weight:600;"></select>
+          </div>
+        </div>
+      </div>
+      <div id="dag-row" class="hidden" style="margin-top:10px;">
+        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">
+          <input id="chk-include-dag" type="checkbox" checked>
+          <span>Include detected Data Access Group column (<span id="dag-col-name" class="mono"></span>)</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 2 -->
+  <section id="step-2" class="card">
+    <div class="card-header">
+      <h2 class="step-title"><span class="step-num">2</span> Pick Fields &amp; Collapse Modes</h2>
+      <span id="selection-counter" class="badge badge-privacy">0 / 0 selected</span>
+    </div>
+
+    <div class="toolbar">
+      <input id="field-search" type="text" class="input" style="min-width:220px;flex:1;" placeholder="Search field name or wildcard (e.g. med_*, symp___*)...">
+      <div id="kind-pills" class="pill-group">
+        <button class="pill active" data-kind="all" type="button">All</button>
+        <button class="pill" data-kind="static" type="button">Static</button>
+        <button class="pill" data-kind="repeating_instrument" type="button">Rep. Instrument</button>
+        <button class="pill" data-kind="repeating_event" type="button">Rep. Event</button>
+        <button class="pill" data-kind="longitudinal" type="button">Longitudinal</button>
+      </div>
+      <select id="filter-inst-select" aria-label="Filter by instrument">
+        <option value="">All instruments</option>
+      </select>
+      <select id="filter-event-select" aria-label="Filter by event">
+        <option value="">All events</option>
+      </select>
+    </div>
+
+    <div class="bulk-bar">
+      <div class="bulk-group">
+        <button id="btn-sel-all" class="btn btn-sm" type="button">Select All</button>
+        <button id="btn-sel-vis" class="btn btn-sm" type="button">Select Visible</button>
+        <button id="btn-sel-none" class="btn btn-sm" type="button">Clear</button>
+        <button id="btn-sel-static" class="btn btn-sm" type="button">Static Only</button>
+        <button id="btn-sel-rep" class="btn btn-sm" type="button">Repeating Only</button>
+        <span id="checkbox-group-pills" class="pill-group"></span>
+      </div>
+      <div class="bulk-group">
+        <span class="muted" style="font-size:12px;">Selected fields:</span>
+        <select id="bulk-mode-select">
+          <option value="">Use Default Mode</option>
+          <option value="wide">wide (pivot columns)</option>
+          <option value="join">join (delimited list)</option>
+          <option value="unique">unique (dedup list)</option>
+          <option value="first">first</option>
+          <option value="last">last</option>
+          <option value="count">count</option>
+          <option value="min">min</option>
+          <option value="max">max</option>
+          <option value="sum">sum</option>
+          <option value="mean">mean</option>
+          <option value="auto">auto</option>
+        </select>
+        <button id="btn-apply-bulk-mode" class="btn btn-sm" type="button">Apply to Selected</button>
+        <button id="btn-reset-modes" class="btn btn-sm" type="button">Reset Overrides</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:34px;"><input id="chk-master" type="checkbox" title="Toggle all visible fields"></th>
+            <th style="width:46px;">#</th>
+            <th>Field Name</th>
+            <th>Type</th>
+            <th>Non-Empty</th>
+            <th>Max/Rec</th>
+            <th>Instruments / Events</th>
+            <th style="width:170px;">Collapse Mode</th>
+          </tr>
+        </thead>
+        <tbody id="fields-tbody">
+          <tr><td colspan="8" class="muted" style="text-align:center;padding:24px;">Load a REDCap CSV or TSV file above to inspect its fields.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="muted" style="font-size:11.5px;margin-top:6px;">Tip: Hold <strong>Shift</strong> and click a checkbox to toggle a range of rows.</div>
+  </section>
+
+  <!-- Step 3 -->
+  <section class="card">
+    <div class="card-header">
+      <h2 class="step-title"><span class="step-num">3</span> Collapse &amp; Export Settings</h2>
+    </div>
+
+    <div class="options-grid">
+      <div class="field-group">
+        <label for="default-mode-select">Default Collapse Mode</label>
+        <select id="default-mode-select" style="width:100%;">
+          <option value="wide" selected>wide (expand multi-line into separate columns)</option>
+          <option value="auto">auto (static single column, multi-line wide)</option>
+          <option value="join">join (combine values into one cell)</option>
+          <option value="unique">unique (combine unique values)</option>
+          <option value="first">first (earliest non-empty value)</option>
+          <option value="last">last (latest non-empty value)</option>
+          <option value="count">count (number of non-empty values)</option>
+          <option value="min">min (minimum numeric value)</option>
+          <option value="max">max (maximum numeric value)</option>
+          <option value="sum">sum (total numeric value)</option>
+          <option value="mean">mean (average numeric value)</option>
+        </select>
+        <div class="help">Applies to every selected field left on "Default".</div>
+      </div>
+
+      <div class="field-group">
+        <label for="sep-input">Join Separator</label>
+        <input id="sep-input" type="text" class="input mono" style="width:100%;" value="; ">
+        <div class="help">Used by <code>join</code>, <code>unique</code>, and rare same-slot collisions in <code>wide</code>.</div>
+      </div>
+
+      <div class="field-group">
+        <label for="output-format-select">Output File Format</label>
+        <select id="output-format-select" style="width:100%;">
+          <option value="csv" selected>CSV (.csv, UTF-8 with BOM for Excel)</option>
+          <option value="tsv">TSV (.tsv, Tab-separated)</option>
+        </select>
+        <div class="help">UTF-8 BOM ensures Excel opens special characters cleanly.</div>
+      </div>
+
+      <div class="field-group">
+        <label>Instance Tagging</label>
+        <label style="display:flex;align-items:center;gap:7px;font-weight:500;padding-top:6px;cursor:pointer;">
+          <input id="chk-tag-instance" type="checkbox">
+          <span>Prefix joined values with <code>[event_i#]</code></span>
+        </label>
+        <div class="help">Helps distinguish visit/instance order inside joined cells.</div>
+      </div>
+    </div>
+
+    <div id="python-output-path-wrap" class="field-group hidden" style="margin-top:12px;">
+      <label for="output-path-input">Optional Direct Disk Output Path (Python Engine only)</label>
+      <input id="output-path-input" type="text" class="input mono" style="width:100%;" placeholder="Leave blank to download via browser, or specify C:\path\to\output_singleline.csv">
+    </div>
+
+    <details id="scope-filter-details" class="hidden">
+      <summary>Filter Specific Events or Repeating Instruments (Optional)</summary>
+      <div id="scope-events-wrap" class="hidden" style="margin-top:8px;">
+        <div style="font-size:12px;font-weight:700;">Include Events (leave all unchecked for all events):</div>
+        <div id="scope-events-checks" class="scope-checks"></div>
+      </div>
+      <div id="scope-insts-wrap" class="hidden" style="margin-top:10px;">
+        <div style="font-size:12px;font-weight:700;">Include Repeating Instruments (leave all unchecked for all):</div>
+        <div id="scope-insts-checks" class="scope-checks"></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Collapse Mode Quick Guide</summary>
+      <div class="legend-grid">
+        <div><strong>wide</strong>: Creates naturally sorted columns (<code>field__i1, field__i2, ..., field__i10</code>).</div>
+        <div><strong>auto</strong>: Keeps single-entry fields as one column and expands multi-line fields wide.</div>
+        <div><strong>join</strong>: Combines all non-empty values in order into one cell.</div>
+        <div><strong>unique</strong>: Combines distinct non-empty values into one cell.</div>
+        <div><strong>first / last</strong>: Keeps earliest or latest non-empty value.</div>
+        <div><strong>count / min / max / sum / mean</strong>: Numeric or count summaries per record.</div>
+      </div>
+    </details>
+  </section>
+
+  <!-- Step 4 -->
+  <section class="card">
+    <div class="card-header">
+      <h2 class="step-title"><span class="step-num">4</span> Preview &amp; Export</h2>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+        <label style="font-size:12.5px;color:var(--muted);">Preview rows:
+          <select id="preview-limit-select">
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+          </select>
+        </label>
+        <button id="btn-preview" class="btn" type="button" disabled>Preview Output</button>
+        <button id="btn-convert" class="btn btn-primary" type="button" disabled>Convert &amp; Export</button>
+        <button id="btn-save-profile" class="btn" type="button" disabled>Save Profile (.json)</button>
+      </div>
+    </div>
+
+    <div id="result-banner" class="banner banner-ok hidden">
+      <span id="result-banner-text"></span>
+    </div>
+
+    <div id="preview-container" class="hidden">
+      <div class="preview-table-wrap">
+        <table>
+          <thead id="preview-thead"></thead>
+          <tbody id="preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="preview-placeholder" class="muted" style="font-size:13px;">
+      Select one or more fields in Step 2, then click <strong>Preview Output</strong> or <strong>Convert &amp; Export</strong>.
+    </div>
+  </section>
+</div>
+
+<input id="profile-file-input" type="file" accept=".json" class="hidden">
+
+<script id="redcap-core-engine">
+// REDCAP_CORE_ENGINE_START
+(function (root) {
+  "use strict";
+
+  const SYS_EVENT_COLS = new Set(["redcap_event_name", "event name"]);
+  const SYS_INST_NAME_COLS = new Set(["redcap_repeat_instrument", "repeat instrument"]);
+  const SYS_INST_NUM_COLS = new Set(["redcap_repeat_instance", "repeat instance"]);
+  const SYS_DAG_COLS = new Set(["redcap_data_access_group", "data access group"]);
+  const SYS_SURVEY_COLS = new Set(["redcap_survey_identifier", "survey identifier"]);
+
+  const VALID_MODES = [
+    "auto", "wide", "join", "unique", "first", "last", "count", "min", "max", "sum", "mean"
+  ];
+  const VALID_MODE_SET = new Set(VALID_MODES);
+
+  function compareCodePoints(a, b) {
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  }
+
+  const CP1252_C1 = [
+    0x20AC, -1, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021,
+    0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, -1, 0x017D, -1,
+    -1, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+    0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, -1, 0x017E, 0x0178,
+  ];
+
+  function decodeSingleByte(bytes, useCp1252) {
+    const chunks = [];
+    const CHUNK = 32768;
+    for (let offset = 0; offset < bytes.length; offset += CHUNK) {
+      const end = Math.min(offset + CHUNK, bytes.length);
+      const codes = new Array(end - offset);
+      for (let i = offset; i < end; i += 1) {
+        const b = bytes[i];
+        if (useCp1252 && b >= 0x80 && b <= 0x9F) {
+          const mapped = CP1252_C1[b - 0x80];
+          if (mapped === -1) return null;
+          codes[i - offset] = mapped;
+        } else {
+          codes[i - offset] = b;
+        }
+      }
+      chunks.push(String.fromCharCode.apply(null, codes));
+    }
+    return chunks.join("");
+  }
+
+  function decodeBytes(input) {
+    const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
+    let text = null;
+    try {
+      text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch (_err) {
+      text = decodeSingleByte(bytes, true);
+      if (text === null) text = decodeSingleByte(bytes, false);
+    }
+    if (text.length > 0 && text.charCodeAt(0) === 0xFEFF) {
+      text = text.slice(1);
+    }
+    return text;
+  }
+
+  function splitSampleRecords(text, delimiter, maxRecords) {
+    const records = [];
+    let row = [];
+    let cell = "";
+    let inQuotes = false;
+    let i = 0;
+    const len = Math.min(text.length, 16384);
+    while (i < len && records.length < maxRecords) {
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (i + 1 < len && text[i + 1] === '"') {
+            cell += '"';
+            i += 2;
+          } else {
+            inQuotes = false;
+            i += 1;
+          }
+        } else {
+          cell += ch;
+          i += 1;
+        }
+      } else if (ch === '"' && cell.length === 0) {
+        inQuotes = true;
+        i += 1;
+      } else if (ch === delimiter) {
+        row.push(cell);
+        cell = "";
+        i += 1;
+      } else if (ch === "\r" || ch === "\n") {
+        row.push(cell);
+        records.push(row);
+        row = [];
+        cell = "";
+        if (ch === "\r" && i + 1 < len && text[i + 1] === "\n") {
+          i += 2;
+        } else {
+          i += 1;
+        }
+      } else {
+        cell += ch;
+        i += 1;
+      }
+    }
+    if ((row.length > 0 || cell.length > 0) && records.length < maxRecords) {
+      row.push(cell);
+      records.push(row);
+    }
+    return records;
+  }
+
+  function detectDelimiter(text, filename) {
+    const candidates = [",", "\t", ";"];
+    let bestDelim = null;
+    let bestScore = -1;
+    for (const d of candidates) {
+      const recs = splitSampleRecords(text, d, 15).filter((r) => r.some((c) => c !== ""));
+      if (recs.length === 0) continue;
+      const firstLen = recs[0].length;
+      if (firstLen < 2) continue;
+      let matching = 0;
+      for (const r of recs) {
+        if (r.length === firstLen) matching += 1;
+      }
+      const consistency = matching / recs.length;
+      if (consistency >= 0.8) {
+        const score = consistency * 1000 + firstLen;
+        if (score > bestScore) {
+          bestScore = score;
+          bestDelim = d;
+        }
+      }
+    }
+    if (bestDelim) return bestDelim;
+    if (filename && String(filename).toLowerCase().endsWith(".tsv")) return "\t";
+    return ",";
+  }
+
+  function parseDelimited(text, delimiter) {
+    const clean = text.length > 0 && text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
+    const rawRows = [];
+    let row = [];
+    let cell = "";
+    let inQuotes = false;
+    let atFieldStart = true;
+    const len = clean.length;
+    let i = 0;
+
+    while (i < len) {
+      const ch = clean[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (i + 1 < len && clean[i + 1] === '"') {
+            cell += '"';
+            i += 2;
+          } else {
+            inQuotes = false;
+            i += 1;
+          }
+        } else {
+          cell += ch;
+          i += 1;
+        }
+      } else if (atFieldStart && ch === '"') {
+        inQuotes = true;
+        atFieldStart = false;
+        i += 1;
+      } else if (ch === delimiter) {
+        row.push(cell);
+        cell = "";
+        atFieldStart = true;
+        i += 1;
+      } else if (ch === "\r" || ch === "\n") {
+        row.push(cell);
+        rawRows.push(row);
+        row = [];
+        cell = "";
+        atFieldStart = true;
+        if (ch === "\r" && i + 1 < len && clean[i + 1] === "\n") {
+          i += 2;
+        } else {
+          i += 1;
+        }
+      } else {
+        cell += ch;
+        atFieldStart = false;
+        i += 1;
+      }
+    }
+    if (!atFieldStart || row.length > 0 || cell.length > 0) {
+      row.push(cell);
+      rawRows.push(row);
+    }
+
+    if (rawRows.length === 0 || rawRows[0].every((h) => h.trim() === "")) {
+      throw new Error("No header row found in file");
+    }
+
+    const headers = rawRows[0].map((h) => (h ? h.trim() : ""));
+    const rows = [];
+    for (let rIdx = 1; rIdx < rawRows.length; rIdx += 1) {
+      const raw = rawRows[rIdx];
+      const obj = Object.create(null);
+      for (let cIdx = 0; cIdx < headers.length; cIdx += 1) {
+        const key = headers[cIdx];
+        if (key !== "" && !(key in obj)) {
+          obj[key] = raw[cIdx] !== undefined && raw[cIdx] !== null ? raw[cIdx] : "";
+        } else if (key !== "") {
+          obj[key] = raw[cIdx] !== undefined && raw[cIdx] !== null ? raw[cIdx] : "";
+        }
+      }
+      rows.push(obj);
+    }
+    return { headers, rows };
+  }
+
+  function findCol(headers, aliases) {
+    for (const h of headers) {
+      if (aliases.has(h.trim().toLowerCase())) return h;
+    }
+    return null;
+  }
+
+  function parseIntSafe(val) {
+    const s = val.trim();
+    if (/^\d+$/.test(s)) {
+      const stripped = s.replace(/^0+/, "") || "0";
+      return [0, stripped.padStart(9, "0")];
+    }
+    return [1, s];
+  }
+
+  function slug(text) {
+    const s = text.trim().replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+    return s || "x";
+  }
+
+  function buildSlotKey(ev, ri, rn, hasMultiEvents) {
+    const parts = [];
+    if (ev && hasMultiEvents) parts.push(slug(ev));
+    if (ri) parts.push(slug(ri));
+    if (rn) parts.push("i" + rn);
+    return parts.length > 0 ? parts.join("_") : "base";
+  }
+
+  function compareSortKeys(a, b) {
+    if (a[0] !== b[0]) return a[0] - b[0];
+    const cmpRi = compareCodePoints(a[1], b[1]);
+    if (cmpRi !== 0) return cmpRi;
+    if (a[2][0] !== b[2][0]) return a[2][0] - b[2][0];
+    const cmpRn = compareCodePoints(a[2][1], b[2][1]);
+    if (cmpRn !== 0) return cmpRn;
+    return a[3] - b[3];
+  }
+
+  function parseFloatStrict(val) {
+    const s = val.trim();
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s)) return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function formatNumberPython(res, mode) {
+    if (Number.isInteger(res) && mode !== "mean") {
+      return String(res === 0 ? 0 : res);
+    }
+    if (res === 0) return "0";
+    const rounded = Number(res.toPrecision(4));
+    const abs = Math.abs(rounded);
+    const expStr = rounded.toExponential(3);
+    const expMatch = expStr.match(/e([+-]\d+)$/);
+    const exp = expMatch ? parseInt(expMatch[1], 10) : 0;
+    if (exp < -4 || exp >= 4) {
+      const [mantRaw, expPart] = expStr.split("e");
+      const mant = mantRaw.replace(/(?:\.0+|(\.\d+?)0+)$/, "$1");
+      const sign = expPart[0];
+      const digits = expPart.slice(1).padStart(2, "0");
+      return mant + "e" + sign + digits;
+    }
+    void abs;
+    return String(rounded);
+  }
+
+  function neumaierSum(nums) {
+    let sum = 0;
+    let c = 0;
+    for (let i = 0; i < nums.length; i += 1) {
+      const x = nums[i];
+      const t = sum + x;
+      if (Math.abs(sum) >= Math.abs(x)) {
+        c += (sum - t) + x;
+      } else {
+        c += (x - t) + sum;
+      }
+      sum = t;
+    }
+    return sum + c;
+  }
+
+  function aggregateValues(items, mode, sep, tagInstance) {
+    if (items.length === 0) return "";
+    const vals = items.map((x) => x[1]);
+    if (mode === "first") return vals[0];
+    if (mode === "last") return vals[vals.length - 1];
+    if (mode === "count") return String(vals.length);
+    if (mode === "unique") {
+      const seen = [];
+      const seenSet = new Set();
+      for (const [slot, v] of items) {
+        if (!seenSet.has(v)) {
+          seenSet.add(v);
+          seen.push(tagInstance && slot !== "base" ? "[" + slot + "] " + v : v);
+        }
+      }
+      return seen.join(sep);
+    }
+    if (mode === "join") {
+      if (tagInstance) {
+        return items.map(([slot, v]) => (slot !== "base" ? "[" + slot + "] " + v : v)).join(sep);
+      }
+      return vals.join(sep);
+    }
+    if (mode === "min" || mode === "max" || mode === "sum" || mode === "mean") {
+      const nums = [];
+      for (const v of vals) {
+        const parsed = parseFloatStrict(v);
+        if (parsed !== null) nums.push(parsed);
+      }
+      if (nums.length === 0) return "";
+      let res;
+      if (mode === "min") {
+        res = nums[0];
+        for (let i = 1; i < nums.length; i += 1) if (nums[i] < res) res = nums[i];
+      } else if (mode === "max") {
+        res = nums[0];
+        for (let i = 1; i < nums.length; i += 1) if (nums[i] > res) res = nums[i];
+      } else if (mode === "sum") {
+        res = neumaierSum(nums);
+      } else {
+        res = neumaierSum(nums) / nums.length;
+      }
+      return formatNumberPython(res, mode);
+    }
+    return vals.join(sep);
+  }
+
+  function escapeRegex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function inspectRedcapText(text, opts) {
+    const o = opts || {};
+    const delim = o.delimiter || detectDelimiter(text, o.filename);
+    const { headers, rows } = parseDelimited(text, delim);
+    const recCol = o.id_col && headers.includes(o.id_col) ? o.id_col : headers[0];
+    const eventCol = findCol(headers, SYS_EVENT_COLS);
+    const instNameCol = findCol(headers, SYS_INST_NAME_COLS);
+    const instNumCol = findCol(headers, SYS_INST_NUM_COLS);
+    const dagCol = findCol(headers, SYS_DAG_COLS);
+    const surveyCol = findCol(headers, SYS_SURVEY_COLS);
+
+    const sysCols = new Set(
+      [recCol, eventCol, instNameCol, instNumCol, dagCol, surveyCol].filter(Boolean)
+    );
+    const dataFields = headers.filter((h) => h && !sysCols.has(h));
+
+    const records = new Set();
+    const events = [];
+    const eventsSeen = new Set();
+    const repeatInstruments = [];
+    const repInstSeen = new Set();
+    let maxInstance = 0;
+
+    const fieldStats = Object.create(null);
+    for (const f of dataFields) {
+      fieldStats[f] = {
+        non_empty: 0,
+        in_static: false,
+        in_rep_instrument: new Set(),
+        in_rep_event: false,
+        events: new Set(),
+        max_per_record: 0,
+        _rec_counts: Object.create(null),
+      };
+    }
+
+    for (const row of rows) {
+      const rid = (row[recCol] || "").trim();
+      if (!rid) continue;
+      records.add(rid);
+      const ev = eventCol ? (row[eventCol] || "").trim() : "";
+      const ri = instNameCol ? (row[instNameCol] || "").trim() : "";
+      const rn = instNumCol ? (row[instNumCol] || "").trim() : "";
+
+      if (ev && !eventsSeen.has(ev)) {
+        eventsSeen.add(ev);
+        events.push(ev);
+      }
+      if (ri && !repInstSeen.has(ri)) {
+        repInstSeen.add(ri);
+        repeatInstruments.push(ri);
+      }
+      if (/^\d+$/.test(rn)) {
+        const num = parseInt(rn, 10);
+        if (num > maxInstance) maxInstance = num;
+      }
+
+      const isRepInst = Boolean(ri);
+      const isRepEvt = Boolean(rn) && !isRepInst;
+
+      for (const f of dataFields) {
+        const val = (row[f] || "").trim();
+        if (val !== "") {
+          const st = fieldStats[f];
+          st.non_empty += 1;
+          if (ev) st.events.add(ev);
+          if (isRepInst) {
+            st.in_rep_instrument.add(ri);
+          } else if (isRepEvt) {
+            st.in_rep_event = true;
+          } else {
+            st.in_static = true;
+          }
+          const nextCnt = (st._rec_counts[rid] || 0) + 1;
+          st._rec_counts[rid] = nextCnt;
+          if (nextCnt > st.max_per_record) st.max_per_record = nextCnt;
+        }
+      }
+    }
+
+    const fieldsOut = dataFields.map((f, idx) => {
+      const st = fieldStats[f];
+      let kind;
+      if (st.in_rep_instrument.size > 0) kind = "repeating_instrument";
+      else if (st.in_rep_event) kind = "repeating_event";
+      else if (st.events.size > 1 || st.max_per_record > 1) kind = "longitudinal";
+      else kind = "static";
+      return {
+        index: idx + 1,
+        name: f,
+        kind,
+        non_empty: st.non_empty,
+        max_per_record: st.max_per_record,
+        instruments: Array.from(st.in_rep_instrument).sort(compareCodePoints),
+        events: Array.from(st.events).sort(compareCodePoints),
+      };
+    });
+
+    return {
+      file: o.filename || "browser_memory",
+      delimiter: delim,
+      total_rows: rows.length,
+      unique_records: records.size,
+      id_col: recCol,
+      headers,
+      system_columns: {
+        event: eventCol,
+        repeat_instrument: instNameCol,
+        repeat_instance: instNumCol,
+        dag: dagCol,
+        survey_identifier: surveyCol,
+      },
+      events,
+      repeat_instruments: repeatInstruments,
+      max_repeat_instance: maxInstance,
+      field_count: fieldsOut.length,
+      fields: fieldsOut,
+    };
+  }
+
+  function convertRedcapText(text, opts) {
+    const o = opts || {};
+    const defaultMode = o.default_mode || "wide";
+    if (!VALID_MODE_SET.has(defaultMode)) {
+      throw new Error("Invalid default_mode '" + defaultMode + "'.");
+    }
+
+    const delim = o.delimiter || detectDelimiter(text, o.filename);
+    const { headers, rows } = parseDelimited(text, delim);
+    const recCol = o.id_col && headers.includes(o.id_col) ? o.id_col : headers[0];
+    const eventCol = findCol(headers, SYS_EVENT_COLS);
+    const instNameCol = findCol(headers, SYS_INST_NAME_COLS);
+    const instNumCol = findCol(headers, SYS_INST_NUM_COLS);
+    const dagCol = findCol(headers, SYS_DAG_COLS);
+    const surveyCol = findCol(headers, SYS_SURVEY_COLS);
+
+    const sysCols = new Set(
+      [recCol, eventCol, instNameCol, instNumCol, dagCol, surveyCol].filter(Boolean)
+    );
+
+    let selected;
+    if (!o.fields || o.fields.length === 0) {
+      selected = headers.filter((h) => h && !sysCols.has(h));
+    } else {
+      selected = [];
+      const selectedSet = new Set();
+      const headerSet = new Set(headers);
+      for (const pattern of o.fields) {
+        if (pattern.includes("*")) {
+          const rx = new RegExp("^" + escapeRegex(pattern).replace(/\\\*/g, ".*") + "$");
+          for (const h of headers) {
+            if (!sysCols.has(h) && rx.test(h) && !selectedSet.has(h)) {
+              selectedSet.add(h);
+              selected.push(h);
+            }
+          }
+        } else if (headerSet.has(pattern) && pattern !== recCol && !selectedSet.has(pattern)) {
+          selectedSet.add(pattern);
+          selected.push(pattern);
+        }
+      }
+    }
+
+    if (selected.length === 0) {
+      throw new Error("No valid fields selected for conversion.");
+    }
+
+    const fmodes = Object.assign(Object.create(null), o.field_modes || {});
+    for (const [k, v] of Object.entries(fmodes)) {
+      if (!VALID_MODE_SET.has(v)) {
+        throw new Error("Invalid mode '" + v + "' for field '" + k + "'.");
+      }
+    }
+
+    const includeDag = o.include_dag !== undefined ? Boolean(o.include_dag) : true;
+    const sep = o.sep !== undefined ? o.sep : "; ";
+    const tagInstance = Boolean(o.tag_instance);
+    const evFilter =
+      o.filter_events && o.filter_events.length > 0
+        ? new Set(o.filter_events.map((e) => e.trim().toLowerCase()))
+        : null;
+    const instFilter =
+      o.filter_instruments && o.filter_instruments.length > 0
+        ? new Set(o.filter_instruments.map((i) => i.trim().toLowerCase()))
+        : null;
+
+    const recordOrder = [];
+    const recordSeen = new Set();
+    const eventOrder = Object.create(null);
+    let eventOrderSize = 0;
+    const allEvents = new Set();
+
+    for (const row of rows) {
+      const rid = (row[recCol] || "").trim();
+      if (!rid) continue;
+      if (!recordSeen.has(rid)) {
+        recordSeen.add(rid);
+        recordOrder.push(rid);
+      }
+      if (eventCol) {
+        const ev = (row[eventCol] || "").trim();
+        if (ev) {
+          allEvents.add(ev);
+          if (!(ev in eventOrder)) {
+            eventOrder[ev] = eventOrderSize;
+            eventOrderSize += 1;
+          }
+        }
+      }
+    }
+
+    const hasMultiEvents = allEvents.size > 1;
+    const previewLimit = o.preview_limit != null ? Number(o.preview_limit) : null;
+    const targetRecords =
+      previewLimit !== null && previewLimit > 0 ? recordOrder.slice(0, previewLimit) : recordOrder;
+    const targetSet = new Set(targetRecords);
+
+    const dagMap = Object.create(null);
+    const recData = Object.create(null);
+    for (const rid of targetRecords) {
+      const bucket = Object.create(null);
+      for (const f of selected) bucket[f] = [];
+      recData[rid] = bucket;
+    }
+
+    const fieldMaxCount = Object.create(null);
+    const fieldSlots = Object.create(null);
+    for (const f of selected) {
+      fieldMaxCount[f] = 0;
+      fieldSlots[f] = Object.create(null);
+    }
+
+    for (let rowIdx = 0; rowIdx < rows.length; rowIdx += 1) {
+      const row = rows[rowIdx];
+      const rid = (row[recCol] || "").trim();
+      if (!targetSet.has(rid)) continue;
+
+      if (dagCol && !(rid in dagMap)) {
+        const dv = (row[dagCol] || "").trim();
+        if (dv) dagMap[rid] = dv;
+      }
+
+      const ev = eventCol ? (row[eventCol] || "").trim() : "";
+      const ri = instNameCol ? (row[instNameCol] || "").trim() : "";
+      const rn = instNumCol ? (row[instNumCol] || "").trim() : "";
+
+      if (evFilter !== null && !evFilter.has(ev.toLowerCase())) continue;
+      if (instFilter !== null && !instFilter.has(ri.toLowerCase())) continue;
+
+      const slot = buildSlotKey(ev, ri, rn, hasMultiEvents);
+      const skey = [
+        ev in eventOrder ? eventOrder[ev] : 999999,
+        ri,
+        parseIntSafe(rn),
+        rowIdx,
+      ];
+
+      for (const f of selected) {
+        const val = (row[f] || "").trim();
+        if (val !== "") {
+          const lst = recData[rid][f];
+          lst.push([skey, slot, val]);
+          if (lst.length > fieldMaxCount[f]) fieldMaxCount[f] = lst.length;
+          if (!(slot in fieldSlots[f]) || compareSortKeys(skey, fieldSlots[f][slot]) < 0) {
+            fieldSlots[f][slot] = skey;
+          }
+        }
+      }
+    }
+
+    const hasDagOut = includeDag && Boolean(dagCol) && Object.keys(dagMap).length > 0;
+    const outHeaders = [recCol];
+    if (hasDagOut) outHeaders.push(dagCol);
+
+    const resolvedModes = Object.create(null);
+    const wideColsMap = Object.create(null);
+
+    for (const f of selected) {
+      let m = f in fmodes ? fmodes[f] : defaultMode;
+      const slotKeys = Object.keys(fieldSlots[f]);
+      const isMulti = fieldMaxCount[f] > 1 || slotKeys.length > 1;
+      if (m === "auto") m = isMulti ? "wide" : "first";
+      resolvedModes[f] = m;
+
+      if (m === "wide" && isMulti) {
+        const orderedSlots = slotKeys.sort((a, b) =>
+          compareSortKeys(fieldSlots[f][a], fieldSlots[f][b])
+        );
+        const pairs = [];
+        for (const s of orderedSlots) {
+          const colName = s !== "base" ? f + "__" + s : f;
+          pairs.push([s, colName]);
+          outHeaders.push(colName);
+        }
+        wideColsMap[f] = pairs;
+      } else {
+        outHeaders.push(f);
+      }
+    }
+
+    const outRows = [];
+    for (const rid of targetRecords) {
+      const outRow = Object.create(null);
+      outRow[recCol] = rid;
+      if (hasDagOut) outRow[dagCol] = dagMap[rid] || "";
+
+      for (const f of selected) {
+        const itemsRaw = recData[rid][f].slice().sort((a, b) => compareSortKeys(a[0], b[0]));
+        const m = resolvedModes[f];
+        if (m === "wide" && f in wideColsMap) {
+          const slotVals = Object.create(null);
+          for (const [, slot, val] of itemsRaw) {
+            if (!(slot in slotVals)) slotVals[slot] = [];
+            slotVals[slot].push(val);
+          }
+          for (const [slot, colName] of wideColsMap[f]) {
+            outRow[colName] = (slotVals[slot] || []).join(sep);
+          }
+        } else {
+          outRow[f] = aggregateValues(
+            itemsRaw.map(([, slot, val]) => [slot, val]),
+            m === "wide" ? "first" : m,
+            sep,
+            tagInstance
+          );
+        }
+      }
+      outRows.push(outRow);
+    }
+
+    return {
+      input_file: o.filename || "browser_memory",
+      output_file: null,
+      input_rows: rows.length,
+      output_rows: outRows.length,
+      unique_records_total: recordOrder.length,
+      output_column_count: outHeaders.length,
+      output_columns: outHeaders,
+      resolved_modes: resolvedModes,
+      preview_rows: outRows.slice(0, previewLimit !== null ? 10 : 3),
+      all_rows: outRows,
+    };
+  }
+
+  function serializeCell(val, delimiter) {
+    const s = val === null || val === undefined ? "" : String(val);
+    if (s.includes(delimiter) || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function serializeDelimited(headers, rows, delimiter, addBom) {
+    const delim = delimiter || ",";
+    const lines = [headers.map((h) => serializeCell(h, delim)).join(delim)];
+    for (const row of rows) {
+      lines.push(headers.map((h) => serializeCell(row[h], delim)).join(delim));
+    }
+    const body = lines.join("\r\n") + "\r\n";
+    return addBom !== false ? "\uFEFF" + body : body;
+  }
+
+  root.RedcapEngine = {
+    VALID_MODES,
+    decodeBytes,
+    detectDelimiter,
+    parseDelimited,
+    inspectRedcapText,
+    convertRedcapText,
+    serializeDelimited,
+  };
+})(typeof globalThis !== "undefined" ? globalThis : window);
+// REDCAP_CORE_ENGINE_END
+</script>
+
+<script id="redcap-server-boot">
+window.__REDCAP_SERVER__ = null;
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  const ServerBoot = window.__REDCAP_SERVER__ || null;
+  const IsPythonMode = Boolean(ServerBoot && ServerBoot.enabled);
+
+  const state = {
+    mode: IsPythonMode ? "python" : "browser",
+    token: IsPythonMode ? ServerBoot.token : null,
+    fileKey: null,
+    inputPath: null,
+    filename: null,
+    rawText: null,
+    inspect: null,
+    selectedFields: new Set(),
+    fieldModes: Object.create(null),
+    kindFilter: "all",
+    searchText: "",
+    instFilter: "",
+    eventFilter: "",
+    lastClickedIndex: null,
+    pendingProfile: null,
+    lastPreview: null,
+  };
+
+  const el = (id) => document.getElementById(id);
+
+  function showStatus(msg, tone) {
+    const box = el("status-banner");
+    const txt = el("status-text");
+    box.className = "banner " + (tone ? "banner-" + tone : "banner-info");
+    txt.textContent = msg;
+    box.classList.remove("hidden");
+  }
+
+  function hideStatus() {
+    el("status-banner").classList.add("hidden");
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function wildcardToRegex(pattern) {
+    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+    return new RegExp("^" + escaped + "$", "i");
+  }
+
+  async function apiJson(path, bodyObj) {
+    const res = await fetch(path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Redcap-Token": state.token || "",
+      },
+      body: JSON.stringify(bodyObj || {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      throw new Error(data.error || ("Server returned HTTP " + res.status));
+    }
+    return data;
+  }
+
+  function initEnvironmentUi() {
+    const badge = el("engine-badge");
+    const badgeText = el("engine-badge-text");
+    if (state.mode === "python") {
+      badge.className = "badge badge-python";
+      badgeText.textContent = "Local Python Engine" + (ServerBoot.python_version ? " (" + ServerBoot.python_version + ")" : "");
+      el("btn-shutdown").classList.remove("hidden");
+      el("python-path-box").classList.remove("hidden");
+      el("python-output-path-wrap").classList.remove("hidden");
+      if (ServerBoot.preloaded) {
+        applyInspectPayload(ServerBoot.preloaded);
+        showStatus("Preloaded file from launch_gui.bat: " + ServerBoot.preloaded.filename, "ok");
+      }
+    } else {
+      badge.className = "badge badge-js";
+      badgeText.textContent = "Offline Browser Engine (Zero-Install)";
+    }
+  }
+
+  function applyInspectPayload(payload) {
+    state.fileKey = payload.file_key || null;
+    state.inputPath = payload.input_path || null;
+    state.inspect = payload.inspect;
+    state.filename = payload.filename || (payload.inspect && payload.inspect.file) || "redcap_export.csv";
+    state.selectedFields = new Set(payload.inspect.fields.map((f) => f.name));
+    state.fieldModes = Object.create(null);
+    state.lastClickedIndex = null;
+    state.lastPreview = null;
+
+    if (state.inputPath && state.mode === "python") {
+      el("local-path-input").value = state.inputPath;
+    }
+
+    renderInspectSummary();
+    if (state.pendingProfile) {
+      applyProfileObject(state.pendingProfile);
+      state.pendingProfile = null;
+    }
+    renderFieldsTable();
+    el("btn-preview").disabled = false;
+    el("btn-convert").disabled = false;
+    el("btn-save-profile").disabled = false;
+    el("btn-save-profile-top").disabled = false;
+    el("result-banner").classList.add("hidden");
+    el("preview-container").classList.add("hidden");
+    el("preview-placeholder").classList.remove("hidden");
+  }
+
+  function renderInspectSummary() {
+    const info = state.inspect;
+    if (!info) return;
+    el("loaded-filename").textContent = state.filename;
+    el("dataset-summary").classList.remove("hidden");
+    el("sum-records").textContent = info.total_rows + " \u2192 " + info.unique_records + " records";
+    el("sum-fields").textContent = String(info.field_count);
+    el("sum-events").textContent = info.events.length ? String(info.events.length) : "Classic (0)";
+    el("sum-insts").textContent = info.repeat_instruments.length ? String(info.repeat_instruments.length) : "0";
+    el("sum-maxinst").textContent = info.max_repeat_instance ? String(info.max_repeat_instance) : "0";
+
+    const idSel = el("id-col-select");
+    const candidateCols = info.headers || [info.id_col].concat(info.fields.map((f) => f.name));
+    idSel.innerHTML = "";
+    for (const col of candidateCols) {
+      const opt = document.createElement("option");
+      opt.value = col;
+      opt.textContent = col;
+      if (col === info.id_col) opt.selected = true;
+      idSel.appendChild(opt);
+    }
+
+    const dagCol = info.system_columns && info.system_columns.dag;
+    if (dagCol) {
+      el("dag-row").classList.remove("hidden");
+      el("dag-col-name").textContent = dagCol;
+    } else {
+      el("dag-row").classList.add("hidden");
+    }
+
+    const instSel = el("filter-inst-select");
+    instSel.innerHTML = '<option value="">All instruments</option>';
+    for (const ri of info.repeat_instruments) {
+      const o = document.createElement("option");
+      o.value = ri;
+      o.textContent = ri;
+      instSel.appendChild(o);
+    }
+
+    const evSel = el("filter-event-select");
+    evSel.innerHTML = '<option value="">All events</option>';
+    for (const ev of info.events) {
+      const o = document.createElement("option");
+      o.value = ev;
+      o.textContent = ev;
+      evSel.appendChild(o);
+    }
+
+    renderCheckboxGroupButtons();
+    renderScopeFilters();
+  }
+
+  function renderCheckboxGroupButtons() {
+    const wrap = el("checkbox-group-pills");
+    wrap.innerHTML = "";
+    if (!state.inspect) return;
+    const groups = new Map();
+    for (const f of state.inspect.fields) {
+      const idx = f.name.indexOf("___");
+      if (idx > 0) {
+        const prefix = f.name.slice(0, idx);
+        groups.set(prefix, (groups.get(prefix) || 0) + 1);
+      }
+    }
+    let count = 0;
+    for (const [prefix, n] of groups.entries()) {
+      if (n < 2 || count >= 6) continue;
+      count += 1;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn btn-sm";
+      btn.textContent = "+ " + prefix + "___* (" + n + ")";
+      btn.title = "Select all checkbox columns matching " + prefix + "___*";
+      btn.addEventListener("click", () => {
+        for (const f of state.inspect.fields) {
+          if (f.name.startsWith(prefix + "___")) state.selectedFields.add(f.name);
+        }
+        renderFieldsTable();
+      });
+      wrap.appendChild(btn);
+    }
+  }
+
+  function renderScopeFilters() {
+    const info = state.inspect;
+    const details = el("scope-filter-details");
+    const evWrap = el("scope-events-wrap");
+    const instWrap = el("scope-insts-wrap");
+    const evChecks = el("scope-events-checks");
+    const instChecks = el("scope-insts-checks");
+    evChecks.innerHTML = "";
+    instChecks.innerHTML = "";
+
+    const hasEvents = info && info.events.length > 0;
+    const hasInsts = info && info.repeat_instruments.length > 0;
+    details.classList.toggle("hidden", !hasEvents && !hasInsts);
+    evWrap.classList.toggle("hidden", !hasEvents);
+    instWrap.classList.toggle("hidden", !hasInsts);
+
+    if (hasEvents) {
+      for (const ev of info.events) {
+        const lbl = document.createElement("label");
+        lbl.innerHTML = '<input type="checkbox" class="scope-ev-chk" value="' + escapeHtml(ev) + '"> <span class="mono">' + escapeHtml(ev) + "</span>";
+        evChecks.appendChild(lbl);
+      }
+    }
+    if (hasInsts) {
+      for (const ri of info.repeat_instruments) {
+        const lbl = document.createElement("label");
+        lbl.innerHTML = '<input type="checkbox" class="scope-inst-chk" value="' + escapeHtml(ri) + '"> <span class="mono">' + escapeHtml(ri) + "</span>";
+        instChecks.appendChild(lbl);
+      }
+    }
+  }
+
+  function getVisibleFields() {
+    if (!state.inspect) return [];
+    const q = state.searchText.trim();
+    const useWildcard = q.includes("*");
+    const rx = useWildcard ? wildcardToRegex(q) : null;
+    const qLow = q.toLowerCase();
+
+    return state.inspect.fields.filter((f) => {
+      if (state.kindFilter !== "all" && f.kind !== state.kindFilter) return false;
+      if (state.instFilter && !f.instruments.includes(state.instFilter)) return false;
+      if (state.eventFilter && !f.events.includes(state.eventFilter)) return false;
+      if (q) {
+        if (useWildcard) {
+          if (!rx.test(f.name)) return false;
+        } else if (!f.name.toLowerCase().includes(qLow)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  function renderFieldsTable() {
+    const tbody = el("fields-tbody");
+    const defMode = el("default-mode-select").value;
+    if (!state.inspect) {
+      el("selection-counter").textContent = "0 / 0 selected";
+      return;
+    }
+
+    const total = state.inspect.fields.length;
+    el("selection-counter").textContent = state.selectedFields.size + " / " + total + " selected";
+
+    const visible = getVisibleFields();
+    if (visible.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="muted" style="text-align:center;padding:20px;">No fields match the current filters.</td></tr>';
+      el("chk-master").checked = false;
+      return;
+    }
+
+    const kindLabel = {
+      static: "STATIC",
+      repeating_instrument: "REP-INST",
+      repeating_event: "REP-EVT",
+      longitudinal: "LONG",
+    };
+
+    const modesList = ["wide", "join", "unique", "first", "last", "count", "min", "max", "sum", "mean", "auto"];
+    const frag = document.createDocumentFragment();
+    let allVisibleSelected = true;
+
+    visible.forEach((f, visIdx) => {
+      const checked = state.selectedFields.has(f.name);
+      if (!checked) allVisibleSelected = false;
+      const tr = document.createElement("tr");
+      if (checked) tr.className = "selected-row";
+
+      const metaParts = [];
+      if (f.instruments.length) metaParts.push("Inst: " + f.instruments.join(", "));
+      if (f.events.length) metaParts.push("Ev: " + f.events.slice(0, 3).join(", ") + (f.events.length > 3 ? " (+" + (f.events.length - 3) + ")" : ""));
+
+      const currentOverride = state.fieldModes[f.name] || "";
+      let modeOptions = '<option value="">Default (' + escapeHtml(defMode) + ")</option>";
+      for (const m of modesList) {
+        modeOptions += '<option value="' + m + '"' + (currentOverride === m ? " selected" : "") + ">" + m + "</option>";
+      }
+
+      tr.innerHTML =
+        '<td><input type="checkbox" class="row-chk" data-field="' + escapeHtml(f.name) + '" data-vidx="' + visIdx + '"' + (checked ? " checked" : "") + "></td>" +
+        '<td class="mono muted">' + f.index + "</td>" +
+        '<td class="mono" style="font-weight:600;">' + escapeHtml(f.name) + "</td>" +
+        '<td><span class="kind-tag kind-' + escapeHtml(f.kind) + '">' + (kindLabel[f.kind] || escapeHtml(f.kind)) + "</span></td>" +
+        '<td class="mono">' + f.non_empty + "</td>" +
+        '<td class="mono">' + f.max_per_record + "</td>" +
+        '<td style="font-size:12px;color:var(--muted);">' + escapeHtml(metaParts.join(" | ") || "-") + "</td>" +
+        '<td><select class="row-mode" data-field="' + escapeHtml(f.name) + '" style="width:100%;">' + modeOptions + "</select></td>";
+      frag.appendChild(tr);
+    });
+
+    tbody.innerHTML = "";
+    tbody.appendChild(frag);
+    el("chk-master").checked = allVisibleSelected;
+  }
+
+  async function handleFileObject(file) {
+    if (!file) return;
+    hideStatus();
+    try {
+      const buf = await file.arrayBuffer();
+      const text = window.RedcapEngine.decodeBytes(buf);
+      state.rawText = text;
+      if (state.mode === "python") {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "X-Redcap-Token": state.token || "",
+            "X-Filename": encodeURIComponent(file.name),
+          },
+          body: buf,
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || "Upload failed");
+        applyInspectPayload(data);
+      } else {
+        const info = window.RedcapEngine.inspectRedcapText(text, { filename: file.name });
+        applyInspectPayload({ filename: file.name, inspect: info });
+      }
+      showStatus("Loaded " + file.name + " (" + state.inspect.unique_records + " unique records, " + state.inspect.field_count + " data fields).", "ok");
+    } catch (err) {
+      showStatus("Failed to load file: " + err.message, "err");
+    }
+  }
+
+  async function reinspectWithIdCol(newIdCol) {
+    if (!state.inspect) return;
+    try {
+      if (state.mode === "python") {
+        const data = await apiJson("/api/inspect", {
+          file_key: state.fileKey,
+          input_path: state.inputPath,
+          id_col: newIdCol,
+        });
+        applyInspectPayload(data);
+      } else {
+        const info = window.RedcapEngine.inspectRedcapText(state.rawText, {
+          filename: state.filename,
+          id_col: newIdCol,
+        });
+        applyInspectPayload({ filename: state.filename, inspect: info });
+      }
+    } catch (err) {
+      showStatus("Re-inspect failed: " + err.message, "err");
+    }
+  }
+
+  function gatherConversionOptions() {
+    if (!state.inspect) throw new Error("Load a REDCap CSV or TSV file first.");
+    const orderedFields = state.inspect.fields
+      .map((f) => f.name)
+      .filter((name) => state.selectedFields.has(name));
+    if (orderedFields.length === 0) {
+      throw new Error("Select at least one field in Step 2.");
+    }
+
+    const fieldModes = {};
+    for (const f of orderedFields) {
+      if (state.fieldModes[f]) fieldModes[f] = state.fieldModes[f];
+    }
+
+    const filterEvents = Array.from(document.querySelectorAll(".scope-ev-chk:checked")).map((c) => c.value);
+    const filterInsts = Array.from(document.querySelectorAll(".scope-inst-chk:checked")).map((c) => c.value);
+
+    return {
+      fields: orderedFields,
+      default_mode: el("default-mode-select").value,
+      field_modes: fieldModes,
+      id_col: el("id-col-select").value || null,
+      include_dag: el("chk-include-dag").checked,
+      sep: el("sep-input").value,
+      tag_instance: el("chk-tag-instance").checked,
+      filter_events: filterEvents.length > 0 ? filterEvents : null,
+      filter_instruments: filterInsts.length > 0 ? filterInsts : null,
+    };
+  }
+
+  function renderPreviewTable(res) {
+    const thead = el("preview-thead");
+    const tbody = el("preview-tbody");
+    const cols = res.output_columns || [];
+    const rows = res.preview_rows || [];
+
+    thead.innerHTML =
+      "<tr>" + cols.map((c) => '<th class="mono" title="' + escapeHtml(c) + '">' + escapeHtml(c) + "</th>").join("") + "</tr>";
+
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="' + Math.max(cols.length, 1) + '" class="muted">No rows to preview.</td></tr>';
+    } else {
+      tbody.innerHTML = rows
+        .map(
+          (r) =>
+            "<tr>" +
+            cols
+              .map((c) => {
+                const v = r[c] !== undefined ? r[c] : "";
+                return '<td class="preview-cell" title="' + escapeHtml(v) + '">' + escapeHtml(v) + "</td>";
+              })
+              .join("") +
+            "</tr>"
+        )
+        .join("");
+    }
+    el("preview-placeholder").classList.add("hidden");
+    el("preview-container").classList.remove("hidden");
+  }
+
+  async function runPreview() {
+    hideStatus();
+    try {
+      const opts = gatherConversionOptions();
+      const limit = parseInt(el("preview-limit-select").value, 10) || 5;
+      let res;
+      if (state.mode === "python") {
+        res = await apiJson("/api/preview", Object.assign({
+          file_key: state.fileKey,
+          input_path: state.inputPath,
+          preview_limit: limit,
+        }, opts));
+      } else {
+        res = window.RedcapEngine.convertRedcapText(
+          state.rawText,
+          Object.assign({ filename: state.filename, preview_limit: limit }, opts)
+        );
+      }
+      renderPreviewTable(res);
+      const rb = el("result-banner");
+      rb.className = "banner banner-info";
+      el("result-banner-text").textContent =
+        "Previewing " + res.output_rows + " of " + res.unique_records_total + " unique records across " + res.output_column_count + " output columns.";
+      rb.classList.remove("hidden");
+    } catch (err) {
+      showStatus("Preview failed: " + err.message, "err");
+    }
+  }
+
+  function triggerBlobDownload(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function runConvert() {
+    hideStatus();
+    try {
+      const opts = gatherConversionOptions();
+      const fmt = el("output-format-select").value;
+      const ext = fmt === "tsv" ? ".tsv" : ".csv";
+      const stem = (state.filename || "redcap_export").replace(/\.[^.]+$/, "");
+      const defaultOutName = stem + "_singleline" + ext;
+      const directPath = state.mode === "python" ? el("output-path-input").value.trim() : "";
+
+      let res;
+      if (state.mode === "python") {
+        res = await apiJson("/api/convert", Object.assign({
+          file_key: state.fileKey,
+          input_path: state.inputPath,
+          output_path: directPath || null,
+          format: fmt,
+          download: !directPath,
+        }, opts));
+        if (res.download_id) {
+          const dlUrl = "/api/download/" + encodeURIComponent(res.download_id) + "?token=" + encodeURIComponent(state.token);
+          const a = document.createElement("a");
+          a.href = dlUrl;
+          a.download = res.download_filename || defaultOutName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }
+      } else {
+        res = window.RedcapEngine.convertRedcapText(
+          state.rawText,
+          Object.assign({ filename: state.filename }, opts)
+        );
+        const outDelim = fmt === "tsv" ? "\t" : ",";
+        const serialized = window.RedcapEngine.serializeDelimited(res.output_columns, res.all_rows, outDelim, true);
+        triggerBlobDownload(serialized, defaultOutName, fmt === "tsv" ? "text/tab-separated-values;charset=utf-8" : "text/csv;charset=utf-8");
+      }
+
+      renderPreviewTable(res);
+      const ok = res.output_rows === res.unique_records_total;
+      const rb = el("result-banner");
+      rb.className = "banner " + (ok ? "banner-ok" : "banner-warn");
+      const destMsg = res.output_file ? ("Saved to " + res.output_file) : ("Downloaded " + defaultOutName);
+      el("result-banner-text").textContent =
+        (ok ? "Verified integrity: " : "Check record count: ") +
+        res.input_rows + " input rows \u2192 " + res.output_rows + " single-line records (expected " +
+        res.unique_records_total + "), " + res.output_column_count + " columns. " + destMsg;
+      rb.classList.remove("hidden");
+    } catch (err) {
+      showStatus("Conversion failed: " + err.message, "err");
+    }
+  }
+
+  function buildProfilePayload() {
+    const opts = gatherConversionOptions();
+    return {
+      fields: opts.fields,
+      default_mode: opts.default_mode,
+      field_modes: opts.field_modes,
+      sep: opts.sep,
+      tag_instance: opts.tag_instance,
+      id_col: opts.id_col,
+      include_dag: opts.include_dag,
+      filter_events: opts.filter_events,
+      filter_instruments: opts.filter_instruments,
+    };
+  }
+
+  function saveProfileFile() {
+    try {
+      const profile = buildProfilePayload();
+      const stem = (state.filename || "redcap_study").replace(/\.[^.]+$/, "");
+      triggerBlobDownload(JSON.stringify(profile, null, 2) + "\n", stem + ".profile.json", "application/json");
+      showStatus("Profile JSON saved (" + profile.fields.length + " fields). Compatible with run_converter.bat --profile and MCP.", "ok");
+    } catch (err) {
+      showStatus("Could not save profile: " + err.message, "err");
+    }
+  }
+
+  function applyProfileObject(prof) {
+    if (!prof || typeof prof !== "object") throw new Error("Invalid profile JSON.");
+    if (prof.default_mode && window.RedcapEngine.VALID_MODES.includes(prof.default_mode)) {
+      el("default-mode-select").value = prof.default_mode;
+    }
+    if (typeof prof.sep === "string") el("sep-input").value = prof.sep;
+    if (typeof prof.tag_instance === "boolean") el("chk-tag-instance").checked = prof.tag_instance;
+    if (typeof prof.include_dag === "boolean") el("chk-include-dag").checked = prof.include_dag;
+
+    if (!state.inspect) {
+      state.pendingProfile = prof;
+      showStatus("Profile staged. Load a REDCap CSV/TSV file to apply its field selection.", "info");
+      return;
+    }
+
+    const available = state.inspect.fields.map((f) => f.name);
+    const availableSet = new Set(available);
+    const newSelected = new Set();
+
+    if (Array.isArray(prof.fields) && prof.fields.length > 0) {
+      for (const pat of prof.fields) {
+        if (typeof pat !== "string") continue;
+        if (pat.includes("*")) {
+          const rx = new RegExp("^" + pat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*") + "$");
+          for (const fname of available) if (rx.test(fname)) newSelected.add(fname);
+        } else if (availableSet.has(pat)) {
+          newSelected.add(pat);
+        }
+      }
+      state.selectedFields = newSelected;
+    }
+
+    state.fieldModes = Object.create(null);
+    if (prof.field_modes && typeof prof.field_modes === "object") {
+      for (const [k, v] of Object.entries(prof.field_modes)) {
+        if (availableSet.has(k) && window.RedcapEngine.VALID_MODES.includes(v)) {
+          state.fieldModes[k] = v;
+        }
+      }
+    }
+
+    if (Array.isArray(prof.filter_events)) {
+      const evSet = new Set(prof.filter_events);
+      document.querySelectorAll(".scope-ev-chk").forEach((c) => { c.checked = evSet.has(c.value); });
+    }
+    if (Array.isArray(prof.filter_instruments)) {
+      const instSet = new Set(prof.filter_instruments);
+      document.querySelectorAll(".scope-inst-chk").forEach((c) => { c.checked = instSet.has(c.value); });
+    }
+
+    renderFieldsTable();
+    showStatus("Applied profile (" + state.selectedFields.size + " matching fields selected).", "ok");
+  }
+
+  // Event wiring
+  const dz = el("dropzone");
+  const fileIn = el("file-input");
+  dz.addEventListener("click", () => fileIn.click());
+  dz.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileIn.click(); }
+  });
+  dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("dragover"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+  dz.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dz.classList.remove("dragover");
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFileObject(e.dataTransfer.files[0]);
+  });
+  fileIn.addEventListener("change", () => {
+    if (fileIn.files && fileIn.files[0]) handleFileObject(fileIn.files[0]);
+    fileIn.value = "";
+  });
+
+  el("btn-inspect-path").addEventListener("click", async () => {
+    const p = el("local-path-input").value.trim().replace(/^"|"$/g, "");
+    if (!p) return;
+    hideStatus();
+    try {
+      const data = await apiJson("/api/inspect", { input_path: p });
+      applyInspectPayload(data);
+      showStatus("Inspected local file: " + data.filename, "ok");
+    } catch (err) {
+      showStatus("Inspect failed: " + err.message, "err");
+    }
+  });
+
+  el("id-col-select").addEventListener("change", (e) => reinspectWithIdCol(e.target.value));
+  el("field-search").addEventListener("input", (e) => { state.searchText = e.target.value; renderFieldsTable(); });
+  el("filter-inst-select").addEventListener("change", (e) => { state.instFilter = e.target.value; renderFieldsTable(); });
+  el("filter-event-select").addEventListener("change", (e) => { state.eventFilter = e.target.value; renderFieldsTable(); });
+  el("default-mode-select").addEventListener("change", () => renderFieldsTable());
+
+  el("kind-pills").addEventListener("click", (e) => {
+    const btn = e.target.closest(".pill");
+    if (!btn) return;
+    el("kind-pills").querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    state.kindFilter = btn.dataset.kind;
+    renderFieldsTable();
+  });
+
+  el("chk-master").addEventListener("change", (e) => {
+    const visible = getVisibleFields();
+    for (const f of visible) {
+      if (e.target.checked) state.selectedFields.add(f.name);
+      else state.selectedFields.delete(f.name);
+    }
+    renderFieldsTable();
+  });
+
+  el("fields-tbody").addEventListener("click", (e) => {
+    const chk = e.target.closest(".row-chk");
+    if (!chk) return;
+    const fname = chk.dataset.field;
+    const vidx = parseInt(chk.dataset.vidx, 10);
+    const visible = getVisibleFields();
+    if (e.shiftKey && state.lastClickedIndex !== null && visible[state.lastClickedIndex]) {
+      const a = Math.min(state.lastClickedIndex, vidx);
+      const b = Math.max(state.lastClickedIndex, vidx);
+      for (let i = a; i <= b; i += 1) {
+        if (chk.checked) state.selectedFields.add(visible[i].name);
+        else state.selectedFields.delete(visible[i].name);
+      }
+    } else {
+      if (chk.checked) state.selectedFields.add(fname);
+      else state.selectedFields.delete(fname);
+    }
+    state.lastClickedIndex = vidx;
+    renderFieldsTable();
+  });
+
+  el("fields-tbody").addEventListener("change", (e) => {
+    const sel = e.target.closest(".row-mode");
+    if (!sel) return;
+    const fname = sel.dataset.field;
+    if (sel.value) state.fieldModes[fname] = sel.value;
+    else delete state.fieldModes[fname];
+  });
+
+  el("btn-sel-all").addEventListener("click", () => {
+    if (!state.inspect) return;
+    state.selectedFields = new Set(state.inspect.fields.map((f) => f.name));
+    renderFieldsTable();
+  });
+  el("btn-sel-vis").addEventListener("click", () => {
+    for (const f of getVisibleFields()) state.selectedFields.add(f.name);
+    renderFieldsTable();
+  });
+  el("btn-sel-none").addEventListener("click", () => {
+    state.selectedFields.clear();
+    renderFieldsTable();
+  });
+  el("btn-sel-static").addEventListener("click", () => {
+    if (!state.inspect) return;
+    state.selectedFields = new Set(state.inspect.fields.filter((f) => f.kind === "static").map((f) => f.name));
+    renderFieldsTable();
+  });
+  el("btn-sel-rep").addEventListener("click", () => {
+    if (!state.inspect) return;
+    state.selectedFields = new Set(state.inspect.fields.filter((f) => f.kind !== "static").map((f) => f.name));
+    renderFieldsTable();
+  });
+
+  el("btn-apply-bulk-mode").addEventListener("click", () => {
+    const m = el("bulk-mode-select").value;
+    for (const fname of state.selectedFields) {
+      if (m) state.fieldModes[fname] = m;
+      else delete state.fieldModes[fname];
+    }
+    renderFieldsTable();
+  });
+  el("btn-reset-modes").addEventListener("click", () => {
+    state.fieldModes = Object.create(null);
+    renderFieldsTable();
+  });
+
+  el("btn-preview").addEventListener("click", runPreview);
+  el("btn-convert").addEventListener("click", runConvert);
+  el("btn-save-profile").addEventListener("click", saveProfileFile);
+  el("btn-save-profile-top").addEventListener("click", saveProfileFile);
+  el("btn-dismiss-status").addEventListener("click", hideStatus);
+
+  const profIn = el("profile-file-input");
+  el("btn-load-profile").addEventListener("click", () => profIn.click());
+  profIn.addEventListener("change", async () => {
+    if (!profIn.files || !profIn.files[0]) return;
+    try {
+      const txt = await profIn.files[0].text();
+      applyProfileObject(JSON.parse(txt));
+    } catch (err) {
+      showStatus("Failed to load profile: " + err.message, "err");
+    }
+    profIn.value = "";
+  });
+
+  el("btn-shutdown").addEventListener("click", async () => {
+    try {
+      await apiJson("/api/shutdown", {});
+      showStatus("Local Python server stopped. You may close this tab.", "warn");
+      el("btn-shutdown").disabled = true;
+    } catch (err) {
+      showStatus("Server shutdown: " + err.message, "warn");
+    }
+  });
+
+  initEnvironmentUi();
+})();
+</script>
+</body>
+</html>
