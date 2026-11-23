@@ -337,7 +337,9 @@ def create_server(
     def _trigger_shutdown() -> None:
         srv = holder.get("server")
         if srv is not None:
-            threading.Thread(target=srv.shutdown, daemon=True).start()
+            timer = threading.Timer(0.15, srv.shutdown)
+            timer.daemon = True
+            timer.start()
 
     app = RedcapGuiApp(
         resolved_html,
@@ -359,6 +361,7 @@ def create_server(
                 self.send_header(k, v)
             self.end_headers()
             self.wfile.write(body)
+            self.wfile.flush()
 
         def do_GET(self) -> None:  # noqa: N802
             try:
