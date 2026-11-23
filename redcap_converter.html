@@ -420,6 +420,7 @@
     <div class="card-header">
       <h2 class="step-title"><span class="step-num">1</span> Load REDCap Export (CSV / TSV)</h2>
       <div style="display:flex;align-items:center;gap:8px;">
+        <button id="btn-load-sample" class="btn btn-sm" type="button">Try Sample CSV</button>
         <span id="loaded-filename" class="mono muted">No file loaded</span>
       </div>
     </div>
@@ -1488,7 +1489,10 @@ window.__REDCAP_SERVER__ = null;
       }
     } else {
       badge.className = "badge badge-js";
-      badgeText.textContent = "Offline Browser Engine (Zero-Install)";
+      badgeText.textContent =
+        window.location.protocol === "file:"
+          ? "Offline Browser Engine (Zero-Install)"
+          : "Browser Engine (100% Client-Side \u2014 Zero Upload)";
     }
   }
 
@@ -2155,6 +2159,23 @@ window.__REDCAP_SERVER__ = null;
     } catch (err) {
       showStatus("Server shutdown: " + err.message, "warn");
     }
+  });
+
+  el("btn-load-sample").addEventListener("click", () => {
+    const sampleCsv = [
+      "study_id,redcap_event_name,redcap_repeat_instrument,redcap_repeat_instance,redcap_data_access_group,age,sex,med_name,med_dose_mg,bp_sys,symp___1,symp___2",
+      "101,baseline_arm_1,,,hosp_a,54,M,,,128,1,0",
+      "101,baseline_arm_1,medications,1,hosp_a,,,Aspirin,100,,,",
+      "101,baseline_arm_1,medications,2,hosp_a,,,Metformin,500,,,",
+      "101,unsched_arm_1,,1,hosp_a,,,,,142,,",
+      "101,unsched_arm_1,,2,hosp_a,,,,,136,,",
+      "102,baseline_arm_1,,,hosp_b,67,F,,,120,0,1",
+      "102,baseline_arm_1,medications,1,hosp_b,,,Drug1,10,,,",
+      "102,baseline_arm_1,medications,2,hosp_b,,,Drug2,20,,,",
+      "102,baseline_arm_1,medications,10,hosp_b,,,Drug10,100,,,",
+    ].join("\r\n") + "\r\n";
+    const sampleFile = new File([sampleCsv], "sample_redcap_export.csv", { type: "text/csv" });
+    handleFileObject(sampleFile);
   });
 
   initEnvironmentUi();

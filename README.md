@@ -5,6 +5,10 @@ Flatten any multi-line REDCap CSV/TSV export (classic or longitudinal, raw or la
 - **100% Local & Offline (PHI-Safe):** No network calls, no external CDNs, no telemetry. All data stays on your machine.
 - **Zero External Dependencies:** Pure Python 3 standard library + self-contained HTML/JS. No `pip install`, no `tkinter`, no PowerShell, and no administrator privileges required.
 
+### Live Web App (GitHub Pages)
+- **Open directly in your browser:** https://lauyeehow1986-hub.github.io/redcap_converter/
+- Runs **100% client-side in your browser** (zero server uploads — PHI never leaves your computer) and includes a built-in **Try Sample CSV** button to test immediately.
+
 ---
 
 ## Quick Start
